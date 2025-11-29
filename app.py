@@ -1,40 +1,57 @@
 import streamlit as st
+from sentence_transformers import SentenceTransformer
+import faiss
+import numpy as np
+import re
 
-# Load knowledge base
-def load_kb(file_path="knowledge_base.txt"):
-    kb = {}
-    with open(file_path, "r") as f:
-        for line in f.readlines():
-            if ":" in line:
-                key, value = line.split(":", 1)
-                kb[key.strip().lower()] = value.strip()
-    return kb
 
-kb = load_kb()
+@st.cache_resource
+def load_kb():
+    with open("knowledge_base.txt", "r", encoding="utf-8") as f:
+        text = f.read()
 
-# Simple keyword-based answer function
-def answer_question(question):
-    q = question.lower()
+    # Parse Q/A pairs
+    qa_pairs = re.findall(r"Q:\s*(.*?)\s*A:\s*(.*?)(?=Q:|$)", text, re.S)
 
-    # Direct keyword match
-    for key in kb:
-        if key in q:
-            return kb[key]
+    faq = []
+    for q, a in qa_pairs:
+        faq.append({"question": q.strip(), "answer": a.strip()})
+    
+    return faq
 
-    # Word-level partial match
-    for key in kb:
-        for w in q.split():
-            if w in key:
-                return kb[key]
 
-    return "Sorry, I don't have information about that."
+@st.cache_resource
+def load_model():
+    return SentenceTransformer("all-MiniLM-L6-v2")
 
-# Streamlit UI
-st.title("📘 Knowledge-Based FAQ Assistant")
-st.write("Ask any question based on the knowledge base.")
 
-question = st.text_input("Enter your question:")
+@st.cache_resource
+def build_index(faq, model):
+    questions = [item["question"] for item in faq]
+    embeddings = model.encode(questions).astype("float32")
 
-if question:
-    answer = answer_question(question)
-    st.success(answer)
+    index = faiss.IndexFlatL2(embeddings.shape[1])
+    index.add(embeddings)
+
+    return index, questions
+
+
+def get_answer(query, faq, model, index, questions):
+    q_embed = model.encode([query]).astype("float32")
+    distances, indices = index.search(q_embed, 1)
+    return faq[indices[0][0]]["answer"]
+
+
+st.title("📚 Knowledge Base FAQ Assistant")
+st.write("Ask any question from the knowledge base!")
+
+faq_data = load_kb()
+model = load_model()
+index, questions = build_index(faq_data, model)
+
+user_query = st.text_input("Enter your question here:")
+
+if user_query:
+    answer = get_answer(user_query, faq_data, model, index, questions)
+    st.subheader("Answer:")
+    st.write(answer)
