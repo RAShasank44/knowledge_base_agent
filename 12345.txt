@@ -1,0 +1,9 @@
+leave policy: Employees can take 12 casual leaves and 12 sick leaves per year.
+work hours: The standard working hours are 9 AM to 6 PM.
+overtime policy: Overtime is compensated with extra pay or time-off.
+dress code: Employees are expected to follow business casual attire.
+salary credit: Salaries are credited on the last working day of every month.
+insurance: All employees receive health insurance coverage after probation.
+holiday list: The company follows 12 national holidays per year.
+transport: Office transport is available from major city points.
+probation period: The probation period is 3 months for new employees.
