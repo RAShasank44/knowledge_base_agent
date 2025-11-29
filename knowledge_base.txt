@@ -7,3 +7,4 @@ insurance: All employees receive health insurance coverage after probation.
 holiday list: The company follows 12 national holidays per year.
 transport: Office transport is available from major city points.
 probation period: The probation period is 3 months for new employees.
+
